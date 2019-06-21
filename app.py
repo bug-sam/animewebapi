@@ -1,4 +1,5 @@
 from flask import Flask
+import database as db
 import recommendationController as rc
 import kitsuController as kc
 
@@ -7,4 +8,5 @@ app.register_blueprint(rc.api)
 app.register_blueprint(kc.api)
 
 if __name__ == "__main__":
+    db.read()
     app.run(debug=True)

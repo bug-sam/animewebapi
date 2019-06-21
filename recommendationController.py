@@ -45,8 +45,16 @@ def create_recommendation():
         db.getNextId())
     if anime in db.recommendations:
         abort(400)
-    db.recommendations.append(anime)
+    db.insert(anime)
     return jsonify({'anime': anime.toDict(idEndpoint)}), 201
+
+@api.route('/<string:title>', methods=['DELETE'])
+def delete_recommendation(title):
+    anime = [anime for anime in db.recommendations if anime.title.lower() == title.lower()]
+    if not anime:
+        abort(404)
+    db.delete(anime[0])
+    return jsonify({'Result': 'Deleted'})
 
 ########## Authentication ##########
 @auth.get_password
