@@ -2,10 +2,10 @@ from anime import Anime
 import mysql.connector
 
 database = mysql.connector.connect(
-    host="localhost",
-    user="state",
-    passwd="senorST15",
-    database="AnimeTestDB"
+    host="stateless.mysql.pythonanywhere-services.com",
+    user="stateless",
+    passwd="nekobaron",
+    database="stateless$animeDB"
 )
 
 cursor = database.cursor()
