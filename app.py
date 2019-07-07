@@ -1,12 +1,24 @@
 from flask import Flask
-import database as db
+import json
 import recommendationController as rc
+from recommendationController import database
 import kitsuController as kc
+
+def loadConfiguration(filepath):
+    f = open(filepath)
+    return json.loads(f.read())
 
 app = Flask(__name__, static_url_path="")
 app.register_blueprint(rc.api)
 app.register_blueprint(kc.api)
-db.read()
-
+config = loadConfiguration("./configuration.json")
+database.connect(
+    config["database host"], 
+    config["username"], 
+    config["password"],
+    config["database"]
+)
+database.read()
+    
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,48 +1,56 @@
 from anime import Anime
 import mysql.connector
 
-database = mysql.connector.connect(
-    host="stateless.mysql.pythonanywhere-services.com",
-    user="stateless",
-    passwd="nekobaron",
-    database="stateless$animeDB"
-)
+class Database:
+    def __init__(self):
+        self.database = None
+        self.cursor = None
+        self.db = []
 
-cursor = database.cursor()
+    def connect(self, host, user, password, database):
+        self.database = mysql.connector.connect(
+            host=host,
+            user=user,
+            passwd=password,
+            database=database
+        )
+        
+        self.cursor = self.database.cursor()
 
-recommendations = []
+    def getdb(self):
+        return self.db
 
-def read():
-    cursor.execute('SELECT * FROM anime')
-    results = cursor.fetchall()
+    def read(self):
+        self.cursor.execute('SELECT * FROM anime')
+        results = self.cursor.fetchall()
 
-    for anime in results:
-        recommendations.append(Anime(
-            anime[1],
-            [anime[2], anime[3]],
-            anime[5],
-            anime[4],
-            getNextId()
-        ))
+        for anime in results:
+            self.db.append(Anime(
+                anime[1],
+                [anime[2], anime[3]],
+                anime[5],
+                anime[4],
+                self.getNextId()
+            ))
 
-def insert(anime):
-    sql = 'INSERT INTO anime (title, japaneseTitle, romajiTitle, score, description) VALUES (%s, %s, %s, %s, %s)'
-    values = (anime.title, anime.japaneseTitles[0], anime.japaneseTitles[1], anime.score, anime.description)
+    def insert(self, anime):
+        sql = 'INSERT INTO anime (title, japaneseTitle, romajiTitle, score, description) VALUES (%s, %s, %s, %s, %s)'
+        values = (anime.title, anime.japaneseTitles[0], anime.japaneseTitles[1], anime.score, anime.description)
 
-    recommendations.append(anime)
+        self.db.append(anime)
 
-    cursor.execute(sql, values)
-    database.commit()
+        self.cursor.execute(sql, values)
+        self.database.commit()
 
-def delete(anime):
-    sql = 'DELETE FROM anime WHERE title = %s'
-    
-    recommendations.remove(anime)
+    def delete(self, anime):
+        sql = 'DELETE FROM anime WHERE title = %s'
+        
+        self.db.remove(anime)
 
-    cursor.execute(sql, (anime.title, ))
-    database.commit()
+        self.cursor.execute(sql, (anime.title, ))
+        self.database.commit()
 
-def getNextId():
-    if recommendations:
-        return recommendations[-1].id + 1
-    return 1
+    def getNextId(self):
+        if self.db:
+            return self.db[-1].id + 1
+        return 1
