@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, abort, make_response, request
 from flask_cors import CORS
-from anime import Anime
+from common.anime import Anime
 import requests
 
 api = Blueprint('kitsu', __name__, url_prefix='/kitsu')

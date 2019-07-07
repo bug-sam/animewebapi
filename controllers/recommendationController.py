@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, abort, make_response, request
 from flask_cors import CORS
-from anime import Anime
-from database import Database
+from common.anime import Anime
+from common.database import Database
 
 api = Blueprint('recommendationapi', __name__, url_prefix='/animewebapi/recommendations')
 cors = CORS(api, origins='https://www.cs.drexel.edu')

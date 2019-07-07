@@ -1,4 +1,4 @@
-from anime import Anime
+from common.anime import Anime
 import mysql.connector
 
 class Database:

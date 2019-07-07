@@ -1,8 +1,8 @@
 from flask import Flask
 import json
-import recommendationController as rc
-from recommendationController import database
-import kitsuController as kc
+import controllers.recommendationController as rc
+from controllers.recommendationController import database
+import controllers.kitsuController as kc
 
 def loadConfiguration(filepath):
     f = open(filepath)
@@ -11,7 +11,7 @@ def loadConfiguration(filepath):
 app = Flask(__name__, static_url_path="")
 app.register_blueprint(rc.api)
 app.register_blueprint(kc.api)
-config = loadConfiguration("./configuration.json")
+config = loadConfiguration("./configuration/configuration.json")
 database.connect(
     config["database host"], 
     config["username"], 
