@@ -59,12 +59,6 @@ def delete_recommendation(title):
     database.delete(anime[0])
     return jsonify({'Result': 'Deleted'})
 
-########## Authentication ##########
-def get_password(username):
-    if username == 'username':
-        return 'password'
-    return None
-
 ########## Error Handling ##########
 @api.errorhandler(404)
 def notfound(self):

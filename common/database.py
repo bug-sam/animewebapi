@@ -20,6 +20,7 @@ class Database:
 
     def read(self, table):
         self.table = table
+        self.db = []
         self.cursor.execute('SELECT * FROM ' + table)
         results = self.cursor.fetchall()
 

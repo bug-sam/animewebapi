@@ -5,8 +5,8 @@ import unittest
 import json
 import uuid
 import controllers.recommendationController as rc
+import configuration.configuration as configuration
 from controllers.recommendationController import database
-from common.database import Database
 from flask import Flask
 
 class RecommendationTests(unittest.TestCase):
@@ -16,26 +16,26 @@ class RecommendationTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        app = Flask(__name__, static_url_path="")
+        app = Flask(__name__, static_url_path='')
         app.register_blueprint(rc.api)
 
-        config = loadConfiguration("../configuration/configuration.json")
+        config = configuration.loadConfiguration()
         database.connect(
-            config["database host"], 
-            config["username"], 
-            config["password"],
-            config["database"]
+            config['database host'], 
+            config['username'], 
+            config['password'],
+            config['database']
         )
 
         cursor = database.cursor
         db = database.database
         cls.testTable = uuid.uuid1().hex
-        cursor.execute("CREATE TABLE " + cls.testTable + 
-            " (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255), japaneseTitle VARCHAR(255), romajiTitle VARCHAR(255), score VARCHAR(255), description TEXT)")
+        cursor.execute('CREATE TABLE ' + cls.testTable + 
+            ' (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255), japaneseTitle VARCHAR(255), romajiTitle VARCHAR(255), score VARCHAR(255), description TEXT)')
         
         sql = 'INSERT INTO ' + cls.testTable + ' (title, japaneseTitle, romajiTitle, score, description) VALUES (%s, %s, %s, %s, %s)'
-        values1 = ("title1", "romaji1", "japanese1", "score1", "description1")
-        values2 = ("title2", "romaji2", "japanese2", "score2", "description2")
+        values1 = ('title1', 'romaji1', 'japanese1', 'score1', 'description1')
+        values2 = ('title2', 'romaji2', 'japanese2', 'score2', 'description2')
         cursor.execute(sql, values1)
         cursor.execute(sql, values2)
         db.commit()
@@ -46,7 +46,7 @@ class RecommendationTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cursor = database.cursor
-        sql = "DROP TABLE " + cls.testTable
+        sql = 'DROP TABLE ' + cls.testTable
         cursor.execute(sql)
     
     def test_get_recommendations_success(self):
@@ -94,14 +94,5 @@ class RecommendationTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-
-def loadConfiguration(filepath):
-        f = open(filepath)
-        parsed = json.loads(f.read())
-        f.close()
-        return parsed
-
 if __name__ == '__main__':
     unittest.main()
-        
-
