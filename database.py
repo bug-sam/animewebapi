@@ -5,6 +5,7 @@ class Database:
     def __init__(self):
         self.database = None
         self.cursor = None
+        self.table = None
         self.db = []
 
     def connect(self, host, user, password, database):
@@ -17,11 +18,9 @@ class Database:
         
         self.cursor = self.database.cursor()
 
-    def getdb(self):
-        return self.db
-
-    def read(self):
-        self.cursor.execute('SELECT * FROM anime')
+    def read(self, table):
+        self.table = table
+        self.cursor.execute('SELECT * FROM ' + table)
         results = self.cursor.fetchall()
 
         for anime in results:
@@ -34,7 +33,7 @@ class Database:
             ))
 
     def insert(self, anime):
-        sql = 'INSERT INTO anime (title, japaneseTitle, romajiTitle, score, description) VALUES (%s, %s, %s, %s, %s)'
+        sql = 'INSERT INTO ' + self.table + ' (title, japaneseTitle, romajiTitle, score, description) VALUES (%s, %s, %s, %s, %s)'
         values = (anime.title, anime.japaneseTitles[0], anime.japaneseTitles[1], anime.score, anime.description)
 
         self.db.append(anime)
@@ -43,7 +42,7 @@ class Database:
         self.database.commit()
 
     def delete(self, anime):
-        sql = 'DELETE FROM anime WHERE title = %s'
+        sql = 'DELETE FROM ' + self.table + ' WHERE title = %s'
         
         self.db.remove(anime)
 
