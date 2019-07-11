@@ -7,11 +7,12 @@ import uuid
 import controllers.recommendationController as rc
 import configuration.configuration as configuration
 from controllers.recommendationController import database
+from common.anime import Anime
 from flask import Flask
 
 class RecommendationTests(unittest.TestCase):
     testTable = None
-    session = None
+    cursor = None
     client = None
 
     @classmethod
@@ -28,6 +29,7 @@ class RecommendationTests(unittest.TestCase):
         )
 
         cursor = database.cursor
+        cls.cursor = cursor
         db = database.database
         cls.testTable = uuid.uuid1().hex
         cursor.execute('CREATE TABLE ' + cls.testTable + 
@@ -93,6 +95,33 @@ class RecommendationTests(unittest.TestCase):
         response = self.client.get('/animewebapi/recommendations/bad_title')
 
         self.assertEqual(response.status_code, 404)
+
+    def test_post_recommendation_success(self):
+        expected = Anime(
+            'title3',
+            ['japanese3', 'romaji3'],
+            'description3',
+            'score3'
+        )
+
+        response = self.client.post(
+            '/animewebapi/recommendations/',
+            json=expected.toDict()
+        )
+        
+        self.cursor.execute('SELECT * FROM ' + self.testTable + ' WHERE title = "title3"')
+        result = self.cursor.fetchall()[0]
+
+        actual = Anime(
+            result[1],
+            [result[2], result[3]],
+            result[5],
+            result[4]
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(actual.toDict(), expected.toDict())
+
 
 if __name__ == '__main__':
     unittest.main()
