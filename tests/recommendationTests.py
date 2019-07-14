@@ -14,6 +14,7 @@ class RecommendationTests(unittest.TestCase):
     testTable = None
     cursor = None
     client = None
+    db = None
 
     @classmethod
     def setUpClass(cls):
@@ -31,6 +32,7 @@ class RecommendationTests(unittest.TestCase):
         cursor = database.cursor
         cls.cursor = cursor
         db = database.database
+        cls.db = db
         cls.testTable = uuid.uuid1().hex
         cursor.execute('CREATE TABLE ' + cls.testTable + 
             ' (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255), japaneseTitle VARCHAR(255), romajiTitle VARCHAR(255), score VARCHAR(255), description TEXT)')
@@ -121,6 +123,22 @@ class RecommendationTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(actual.toDict(), expected.toDict())
+
+    def test_delete_recommendation_sucess(self):
+        sql = 'INSERT INTO ' + self.testTable + ' (title, japaneseTitle, romajiTitle, score, description) VALUES (%s, %s, %s, %s, %s)'
+        values = ('title4', 'romaji4', 'japanese4', 'score4', 'description4')
+        anime = Anime('title4', ['romaji4', 'japanese4'], 'score4', 'description4')
+        self.cursor.execute(sql, values)
+        self.db.commit()
+        database.read(self.testTable)
+
+        response = self.client.delete('animewebapi/recommendations/title4')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(anime in database.db)
+        with self.assertRaises(IndexError):
+            self.cursor.execute('SELECT * FROM ' + self.testTable + ' WHERE title = "title3"')
+            self.cursor.fetchall()[0]
 
 
 if __name__ == '__main__':
