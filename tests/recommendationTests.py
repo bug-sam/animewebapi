@@ -1,3 +1,6 @@
+# !! TESTS WERE WRITTEN FOR PREVIOUS VERSION !!
+# TODO: riwrite tests for corrent version
+
 import sys
 sys.path.insert(0, '../')
 
