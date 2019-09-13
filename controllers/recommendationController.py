@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, abort, make_response, request
+from flask import Blueprint, jsonify, make_response, request
 from flask_cors import CORS
 from common.anime import Anime
 from common.database import Database
@@ -27,7 +27,7 @@ def get_recommendation():
         payload.append(a.toDict(idEndpoint))
     return jsonify({'anime': payload})
 
-# Get a list of recommended anime
+# Get a recommendation by id
 @api.route('/recommendations/<int:recommendationId>', methods=['GET'])
 def get_recommendation_byid(recommendationId):
     payload = []
@@ -41,18 +41,56 @@ def create_recommendation():
     if not request.json or not 'title' in request.json or not 'userId' in request.json:
         e = error(400, 'Must include a title and a userId')
         return e.toResponse()
+    
+    try:
+        romaji = request.json['japaneseTitles']['romaji']
+    except Exception:
+        romaji = None
+    
+    try:
+        native = request.json['japaneseTitles']['native']
+    except Exception:
+        native = None
+
+    try:
+        description = request.json['description']
+    except Exception:
+        description = None
+
+    try:
+        score = request.json['score']
+    except Exception:
+        score = None
+
+    try:
+        anilistLink = request.json['links']['anilist']
+    except Exception:
+        anilistLink = None
+
+    try:
+        malLink = request.json['links']['mal']
+    except Exception:
+        malLink = None
+
+    try:
+        image = request.json['image']
+    except Exception:
+        image = None
+
     anime = Anime(
         request.json['title'],
-        request.json['japaneseTitles']['romaji'],
-        request.json['japaneseTitles']['native'],
-        request.json['description'],
-        request.json['score'],
-        request.json['links']['anilist'],
-        request.json['links']['mal'],
-        request.json['image'],
+        romaji,
+        native,
+        description,
+        score,
+        anilistLink,
+        malLink,
+        image,
         request.json['userId']
     )
+
     code = database.insert(anime)
+    
     if code == 201:
         return jsonify({'anime': anime.toDict(idEndpoint)}), 201
     else:
@@ -66,12 +104,3 @@ def delete_recommendation(title):
     userId = request.args.get('userId', default=None, type=int)
     database.delete(title, userId)
     return jsonify({'Result': 'Deleted'})
-
-########## Error Handling ##########
-@api.errorhandler(404)
-def notfound(self):
-    return make_response(jsonify({'error': 'Not Found'}), 404)
-
-@api.errorhandler(400)
-def badrequest(Self):
-    return make_response(jsonify({'error': 'Bad Request'}), 400)
