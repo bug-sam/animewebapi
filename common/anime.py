@@ -1,10 +1,13 @@
 from flask import url_for
 class Anime:
-    def __init__(self, t, jt, d, s, i=None):
-        self.title = t
-        self.japaneseTitles = jt
-        self.description = d
-        self.score = s
+    def __init__(self, title, japaneseTitles, description, score, links, image, userId=None, i=None):
+        self.title = title
+        self.japaneseTitles = japaneseTitles
+        self.description = description
+        self.score = score
+        self.links = links
+        self.image = image
+        self.userId = userId
         self.id = i
 
     def toDict(self, endpoint=''):
@@ -13,8 +16,12 @@ class Anime:
             'japanese titles': self.japaneseTitles,
             'description': self.description,
             'score': self.score,
+            'links': self.links
         }
         
+        if self.userId:
+            dictionary['userId'] = self.userId
+
         if self.id:
             dictionary['id'] = self.id
             
