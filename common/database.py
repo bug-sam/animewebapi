@@ -6,7 +6,6 @@ class Database:
         self.database = None
         self.cursor = None
         self.table = None
-        self.db = []
 
     def connect(self, host, user, password, database):
         self.database = mysql.connector.connect(
@@ -18,10 +17,21 @@ class Database:
         
         self.cursor = self.database.cursor()
 
-    def read(self, table):
-        self.table = table
-        self.db = []
-        self.cursor.execute('SELECT * FROM ' + table)
+    def get(self, table, params):
+        query = 'SELECT * FROM ' + table
+        i = 1
+        last = len(params)
+
+        for key, val in params:
+            if i == 1:
+                query += ' WHERE '
+            
+            query += key + ' = ' + val
+
+            if i != last:
+                query += ' AND'
+
+        self.cursor.execute(query)
         results = self.cursor.fetchall()
 
         for anime in results:
@@ -30,27 +40,18 @@ class Database:
                 [anime[2], anime[3]],
                 anime[5],
                 anime[4],
-                self.getNextId()
+                anime[0]
             ))
 
     def insert(self, anime):
         sql = 'INSERT INTO ' + self.table + ' (title, japaneseTitle, romajiTitle, score, description) VALUES (%s, %s, %s, %s, %s)'
         values = (anime.title, anime.japaneseTitles[0], anime.japaneseTitles[1], anime.score, anime.description)
 
-        self.db.append(anime)
-
         self.cursor.execute(sql, values)
         self.database.commit()
 
     def delete(self, anime):
         sql = 'DELETE FROM ' + self.table + ' WHERE title = %s'
-        
-        self.db.remove(anime)
 
         self.cursor.execute(sql, (anime.title, ))
         self.database.commit()
-
-    def getNextId(self):
-        if self.db:
-            return self.db[-1].id + 1
-        return 1
