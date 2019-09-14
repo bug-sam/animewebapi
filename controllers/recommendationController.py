@@ -23,16 +23,26 @@ def get_recommendation():
         params.update({'userId': userId})
 
     payload = []
-    for a in database.get('anime', params=params):
+    for a in database.get(params=params):
         payload.append(a.toDict(idEndpoint))
+
+    if (title or userId) and not payload:
+        e = error(404, 'No recommendations were found')
+        return e.toResponse()
+
     return jsonify({'anime': payload})
 
 # Get a recommendation by id
 @api.route('/recommendations/<int:recommendationId>', methods=['GET'])
 def get_recommendation_byid(recommendationId):
     payload = []
-    for a in database.get('anime', {'id': recommendationId}):
+    for a in database.get(params={'id': recommendationId}):
         payload.append(a.toDict(idEndpoint))
+    
+    if not payload:
+        e = error(404, 'No recommendations were found with that id')
+        return e.toResponse()
+
     return jsonify({'anime': payload})
 
 # Add a new recommendation
@@ -97,10 +107,14 @@ def create_recommendation():
         e = error(code, 'The anime already exists')
         return e.toResponse()
 
-# Delete a recommendation by title
+# Delete a recommendation
 @api.route('/recommendations', methods=['DELETE'])
-def delete_recommendation(title):
+def delete_recommendation():
     title = request.args.get('title', default=None, type=str)
     userId = request.args.get('userId', default=None, type=int)
+    if not title or not userId:
+        e = error(400, 'Must supply a title and userId as a url parameter')
+        return e.toResponse()
+
     database.delete(title, userId)
     return jsonify({'Result': 'Deleted'})

@@ -1,6 +1,7 @@
 {
-    "database host": "localhost",
-    "database": "animetestdb",
-    "username": "state",
-    "password": "senorST15"
+    "database host": "",
+    "database": "",
+    "username": "",
+    "password": "",
+    "table": ""
 }

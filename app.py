@@ -14,8 +14,9 @@ database.connect(
     config['database host'], 
     config['username'], 
     config['password'],
-    config['database']
+    config['database'],
+    config['table']
 )
-    
+
 if __name__ == '__main__':
     app.run(debug=True)

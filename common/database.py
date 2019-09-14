@@ -5,8 +5,9 @@ class Database:
     def __init__(self):
         self.database = None
         self.cursor = None
+        self.table = None
 
-    def connect(self, host, user, password, database):
+    def connect(self, host, user, password, database, table):
         self.database = mysql.connector.connect(
             host=host,
             user=user,
@@ -14,10 +15,11 @@ class Database:
             database=database
         )
         
+        self.table = table
         self.cursor = self.database.cursor()
 
-    def get(self, table='anime', params=None):
-        query = 'SELECT * FROM ' + table
+    def get(self, params=None):
+        query = 'SELECT * FROM ' + self.table
         
         if params:
             i = 1
@@ -38,8 +40,6 @@ class Database:
                     query += ' AND '
                 
                 i += 1
-
-        print(query)
 
         self.cursor.execute(query)
         results = self.cursor.fetchall()
@@ -62,11 +62,11 @@ class Database:
         
         return animes
 
-    def insert(self, anime, table='anime'):
+    def insert(self, anime):
         exists = self.get(params={'title': anime.title, 'userId': anime.userId})
         if exists:
             return 400
-        query = 'INSERT INTO ' + table + ' (title, romaji, native, description, score, anilistLink, malLink, image, userId) '
+        query = 'INSERT INTO ' + self.table + ' (title, romaji, native, description, score, anilistLink, malLink, image, userId) '
         query += 'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
         values = (anime.title, anime.romaji, anime.native, anime.description, anime.score, anime.anilistLink, anime.malLink, anime.image, anime.userId)
 
@@ -75,8 +75,8 @@ class Database:
 
         return 201
 
-    def delete(self, title, userId, table='anime'):
-        sql = 'DELETE FROM ' + table + ' WHERE title = %s AND userId = %s'
+    def delete(self, title, userId):
+        sql = 'DELETE FROM ' + self.table + ' WHERE title = %s AND userId = %s'
 
         self.cursor.execute(sql, (title, userId, ))
         self.database.commit()
