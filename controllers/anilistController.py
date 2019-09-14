@@ -118,18 +118,14 @@ def parseSearch(rawResponse):
 
 def parse(rawResponse):
     data = rawResponse['data']['Media']
-    print(data)
+
     title = data['title']['english']
+    romaji = data['title']['romaji']
+    native = data['title']['native']
 
-    japaneseTitles = [
-        data['title']['romaji'],
-        data['title']['native']
-    ]
-
-    links = [
-        'https://anilist.co/anime/' + str(data['id']),
-        'https://myanimelist.net/anime/' + str(data['idMal'])
-    ]
+    anilistLink = 'https://anilist.co/anime/' + str(data['id'])
+    malLink = 'https://myanimelist.net/anime/' + str(data['idMal'])
+    
 
     score = data['averageScore']
 
@@ -137,6 +133,6 @@ def parse(rawResponse):
 
     image = data['coverImage']['medium']
 
-    anime = Anime(title, japaneseTitles, description, score, links, image)
+    anime = Anime(title, romaji, native, description, score, anilistLink, malLink, image)
 
     return anime
