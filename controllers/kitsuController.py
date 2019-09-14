@@ -47,9 +47,13 @@ def parse(response):
 
     return Anime(
         title_english,
-        [title_japanese, title_romaji],
+        title_romaji,
+        title_japanese,
         description,
-        rating
+        rating,
+        None,
+        None,
+        None
     )
 
 
