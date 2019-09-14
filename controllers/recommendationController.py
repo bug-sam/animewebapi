@@ -1,69 +1,120 @@
-from flask import Blueprint, jsonify, abort, make_response, request
+from flask import Blueprint, jsonify, make_response, request
 from flask_cors import CORS
 from common.anime import Anime
 from common.database import Database
+from common.error import error
 
-api = Blueprint('recommendationapi', __name__, url_prefix='/animewebapi/recommendations')
+api = Blueprint('recommendationapi', __name__, url_prefix='/animewebapi')
 cors = CORS(api, origins='https://www.cs.drexel.edu')
 idEndpoint = 'recommendationapi.get_recommendation_byid'
 database = Database()
 
 # Get a list of recommended anime
-@api.route('/', methods=['GET'])
+@api.route('/recommendations', methods=['GET'])
 def get_recommendation():
+    params = {}
+    
+    title = request.args.get('title', default=None, type=str)
+    userId = request.args.get('userId', default=None, type=int)
+
+    if title:
+        params.update({'title': title})
+    if userId:
+        params.update({'userId': userId})
+
     payload = []
-    for a in database.db:
+    for a in database.get(params=params):
         payload.append(a.toDict(idEndpoint))
+
+    if (title or userId) and not payload:
+        e = error(404, 'No recommendations were found')
+        return e.toResponse()
+
     return jsonify({'anime': payload})
 
-# Get a recommended anime by ID
-@api.route('/<int:anime_id>', methods=['GET'])
-def get_recommendation_byid(anime_id):
-    payload = [anime for anime in database.db if anime.id == anime_id]
-    if payload:
-        payload = payload[0].toDict(idEndpoint)
-        return jsonify({'anime': payload})
-    abort(404)
+# Get a recommendation by id
+@api.route('/recommendations/<int:recommendationId>', methods=['GET'])
+def get_recommendation_byid(recommendationId):
+    payload = []
+    for a in database.get(params={'id': recommendationId}):
+        payload.append(a.toDict(idEndpoint))
+    
+    if not payload:
+        e = error(404, 'No recommendations were found with that id')
+        return e.toResponse()
 
-# Get a recommended anime by title
-@api.route('/<string:title>', methods=['GET'])
-def get_recommendation_bytitle(title):
-    payload = [anime for anime in database.db if anime.title.lower() == title.lower()]
-    if payload:
-        payload = payload[0].toDict(idEndpoint) 
-        return jsonify({'anime': payload})
-    abort(404)
+    return jsonify({'anime': payload})
 
 # Add a new recommendation
-@api.route('/', methods=['POST'])
+@api.route('/recommendations', methods=['POST'])
 def create_recommendation():
-    if not request.json or not 'title' in request.json:
-        abort(400)
+    if not request.json or not 'title' in request.json or not 'userId' in request.json:
+        e = error(400, 'Must include a title and a userId')
+        return e.toResponse()
+    
+    try:
+        romaji = request.json['japaneseTitles']['romaji']
+    except Exception:
+        romaji = None
+    
+    try:
+        native = request.json['japaneseTitles']['native']
+    except Exception:
+        native = None
+
+    try:
+        description = request.json['description']
+    except Exception:
+        description = None
+
+    try:
+        score = request.json['score']
+    except Exception:
+        score = None
+
+    try:
+        anilistLink = request.json['links']['anilist']
+    except Exception:
+        anilistLink = None
+
+    try:
+        malLink = request.json['links']['mal']
+    except Exception:
+        malLink = None
+
+    try:
+        image = request.json['image']
+    except Exception:
+        image = None
+
     anime = Anime(
         request.json['title'],
-        request.json['japanese titles'],
-        request.json['description'],
-        request.json['score'],
-        database.getNextId())
-    if anime in database.db:
-        abort(400)
-    database.insert(anime)
-    return jsonify({'anime': anime.toDict(idEndpoint)}), 201
+        romaji,
+        native,
+        description,
+        score,
+        anilistLink,
+        malLink,
+        image,
+        request.json['userId']
+    )
 
-# Delete a recommendation by title
-@api.route('/<string:title>', methods=['DELETE'])
-def delete_recommendation(title):
-    anime = [anime for anime in database.db if anime.title.lower() == title.lower()]
-    if not anime:
-        abort(404)
-    database.delete(anime[0])
+    code = database.insert(anime)
+    
+    if code == 201:
+        return jsonify({'anime': anime.toDict(idEndpoint)}), 201
+    else:
+        e = error(code, 'The anime already exists')
+        return e.toResponse()
+
+# Delete a recommendation
+@api.route('/recommendations', methods=['DELETE'])
+def delete_recommendation():
+    title = request.args.get('title', default=None, type=str)
+    userId = request.args.get('userId', default=None, type=int)
+    if not title or not userId:
+        e = error(400, 'Must supply a title and userId as a url parameter')
+        return e.toResponse()
+
+    database.delete(title, userId)
     return jsonify({'Result': 'Deleted'})
-
-########## Error Handling ##########
-@api.errorhandler(404)
-def notfound(self):
-    return make_response(jsonify({'error': 'Not Found'}), 404)
-
-@api.errorhandler(400)
-def badrequest(Self):
-    return make_response(jsonify({'error': 'Bad Request'}), 400)

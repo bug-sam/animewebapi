@@ -6,9 +6,8 @@ class Database:
         self.database = None
         self.cursor = None
         self.table = None
-        self.db = []
 
-    def connect(self, host, user, password, database):
+    def connect(self, host, user, password, database, table):
         self.database = mysql.connector.connect(
             host=host,
             user=user,
@@ -16,41 +15,68 @@ class Database:
             database=database
         )
         
+        self.table = table
         self.cursor = self.database.cursor()
 
-    def read(self, table):
-        self.table = table
-        self.db = []
-        self.cursor.execute('SELECT * FROM ' + table)
+    def get(self, params=None):
+        query = 'SELECT * FROM ' + self.table
+        
+        if params:
+            i = 1
+            last = len(params)
+            for key, val in params.items():
+                try:
+                    val = int(val)
+                    val = str(val)
+                except ValueError:
+                    val = "'" + val + "'"
+
+                if i == 1:
+                    query += ' WHERE '
+                
+                query += key + ' = ' + val
+
+                if i != last:
+                    query += ' AND '
+                
+                i += 1
+
+        self.cursor.execute(query)
         results = self.cursor.fetchall()
 
+        animes = []
+
         for anime in results:
-            self.db.append(Anime(
-                anime[1],
-                [anime[2], anime[3]],
-                anime[5],
-                anime[4],
-                self.getNextId()
+            animes.append(Anime(
+                anime[1], # title
+                anime[2], # romaji
+                anime[3], # native
+                anime[4], # description
+                anime[5], # score
+                anime[6], # anilistLink
+                anime[7], # malLink
+                anime[8], # image
+                anime[9], # userId
+                anime[0]  # id
             ))
+        
+        return animes
 
     def insert(self, anime):
-        sql = 'INSERT INTO ' + self.table + ' (title, japaneseTitle, romajiTitle, score, description) VALUES (%s, %s, %s, %s, %s)'
-        values = (anime.title, anime.japaneseTitles[0], anime.japaneseTitles[1], anime.score, anime.description)
+        exists = self.get(params={'title': anime.title, 'userId': anime.userId})
+        if exists:
+            return 400
+        query = 'INSERT INTO ' + self.table + ' (title, romaji, native, description, score, anilistLink, malLink, image, userId) '
+        query += 'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        values = (anime.title, anime.romaji, anime.native, anime.description, anime.score, anime.anilistLink, anime.malLink, anime.image, anime.userId)
 
-        self.db.append(anime)
-
-        self.cursor.execute(sql, values)
+        self.cursor.execute(query, values)
         self.database.commit()
 
-    def delete(self, anime):
-        sql = 'DELETE FROM ' + self.table + ' WHERE title = %s'
-        
-        self.db.remove(anime)
+        return 201
 
-        self.cursor.execute(sql, (anime.title, ))
+    def delete(self, title, userId):
+        sql = 'DELETE FROM ' + self.table + ' WHERE title = %s AND userId = %s'
+
+        self.cursor.execute(sql, (title, userId, ))
         self.database.commit()
-
-    def getNextId(self):
-        if self.db:
-            return self.db[-1].id + 1
-        return 1
