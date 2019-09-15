@@ -12,6 +12,7 @@ database = Database()
 # Get a list of recommended anime
 @api.route('/recommendations', methods=['GET'])
 def get_recommendation():
+    database.database.ping(reconnect=True)
     params = {}
     
     title = request.args.get('title', default=None, type=str)
@@ -35,6 +36,7 @@ def get_recommendation():
 # Get a recommendation by id
 @api.route('/recommendations/<int:recommendationId>', methods=['GET'])
 def get_recommendation_byid(recommendationId):
+    database.database.ping(reconnect=True)
     payload = []
     for a in database.get(params={'id': recommendationId}):
         payload.append(a.toDict(idEndpoint))
@@ -48,6 +50,7 @@ def get_recommendation_byid(recommendationId):
 # Add a new recommendation
 @api.route('/recommendations', methods=['POST'])
 def create_recommendation():
+    database.database.ping(reconnect=True)
     if not request.json or not 'title' in request.json or not 'userId' in request.json:
         e = error(400, 'Must include a title and a userId')
         return e.toResponse()
@@ -110,6 +113,7 @@ def create_recommendation():
 # Delete a recommendation
 @api.route('/recommendations', methods=['DELETE'])
 def delete_recommendation():
+    database.database.ping(reconnect=True)
     title = request.args.get('title', default=None, type=str)
     userId = request.args.get('userId', default=None, type=int)
     if not title or not userId:
